@@ -13,7 +13,11 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             return;
         }
         // Connect to the WebSocket server
-        const ws = new WebSocket("ws://localhost:8080"); // Replace with your WebSocket server URL
+        const websocketUrl =
+            process.env.NODE_ENV === "production"
+                ? "https://mux-video-player.onrender.com"
+                : "ws://localhost:8080";
+        const ws = new WebSocket(websocketUrl);
         setSocket(ws);
         console.log("useEffect: WebSocket connection established");
 
