@@ -60,11 +60,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     }, []);
 
     const openNewWindow = () => {
-        window.open(
-            "http://localhost:5173",
-            "",
-            "width=800,height=600,left=500,top=100"
-        );
+        window.open("/", "", "width=800,height=600,left=500,top=100");
     };
 
     const togglePlay = () => {
@@ -104,9 +100,11 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     };
 
     const debouncedSeeking = debounce((event, currentTime) => {
-        const newTime = event.target.getAttribute("mediacurrenttime");
+        const newTime = parseFloat(
+            event.target.getAttribute("mediacurrenttime")
+        );
         const moveBy = newTime - currentTime;
-        moveWindow(moveBy > 0 ? 100 : -100);
+        moveWindow(moveBy > 0 ? 100 : -100, 0);
     }, 300);
 
     const handleSeeking = (event) => {
