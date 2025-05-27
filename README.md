@@ -10,4 +10,14 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
 # mux-video-player
+
+## bugs / ideas
+
+* seeking moving the browser window doesn't work unless the user clicks to open in a new window; make home a separate route where we ask for all permissions and then generate the new window
+* make the moveX when seeking dynamic based on how much we're seeking (seeking by 1 min should move more than seeking by 10 seconds)
+* something with the accelerometer?
+* something with the playback speed?
+* something with the volume? global volume control?
+* I partially implemented seeking info to the websocket but we're not actually reading it. if one person seeks, we all seek. we are a hive mind. sharing is caring.
