@@ -59,10 +59,6 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         };
     }, []);
 
-    const openNewWindow = () => {
-        window.open("/", "", "width=800,height=600,left=500,top=100");
-    };
-
     const togglePlay = () => {
         if (videoRef.current) {
             const newIsPlaying = !isPlaying;
@@ -131,7 +127,6 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     return (
         <>
             <button onClick={togglePlay}>{isPlaying ? "Pause" : "Play"}</button>
-            <button onClick={openNewWindow}>Open New Window</button>
             <MediaController id="player">
                 <MuxVideo
                     ref={videoRef}
