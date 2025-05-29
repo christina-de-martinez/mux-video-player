@@ -16,7 +16,9 @@ If you are developing a production application, we recommend using TypeScript wi
 ## bugs / ideas
 
 * global volume control. make a sound as loud as you want the video to be.
+* your playback speed is a function of your battery percentage: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getBattery
 * factor your playback speed in to your longitude. People at the equator get 1x playback speed, but if you're at a different latitude it slows it down for you
 * make the moveX when seeking dynamic based on how much we're seeking (seeking by 1 min should move more than seeking by 10 seconds)
 * something with the accelerometer?
 * I partially implemented seeking info to the websocket but we're not actually reading it. if one person seeks, we all seek. we are a hive mind. sharing is caring.
+* improve styling

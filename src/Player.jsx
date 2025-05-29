@@ -2,14 +2,16 @@ import {
     MediaControlBar,
     MediaController,
     MediaTimeRange,
+    MediaVolumeRange,
 } from "media-chrome/react";
 import { useRef, useEffect, useState } from "react";
 import MuxVideo from "@mux/mux-video-react";
-import { debounce } from "./utils";
+import { debounce, getAudioVolumeLevel } from "./utils";
 
 const Player = ({ isPlaying: initialIsPlaying }) => {
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(initialIsPlaying);
+    const [volume, setVolume] = useState(1); // Default volume level
     const [socket, setSocket] = useState(null);
 
     useEffect(() => {
@@ -89,6 +91,26 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         }
     };
 
+    const getVolume = async () => {
+        if (typeof window === "undefined") {
+            console.log("window is undefined, skipping volume check");
+            return;
+        }
+        const volume = await getAudioVolumeLevel();
+        setVolume(Math.min(volume / 90, 1.0));
+    };
+
+    useEffect(() => {
+        if (videoRef.current) {
+            videoRef.current.volume = volume;
+        }
+        return () => {
+            if (videoRef.current) {
+                videoRef.current.volume = 1;
+            }
+        };
+    }, [volume]);
+
     const moveWindow = (moveByPx) => {
         if (typeof window !== "undefined") {
             window.moveBy(moveByPx, 0);
@@ -127,17 +149,18 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     return (
         <>
             <button onClick={togglePlay}>{isPlaying ? "Pause" : "Play"}</button>
+            <button onClick={getVolume}>Get Volume</button>
             <MediaController id="player">
                 <MuxVideo
                     ref={videoRef}
                     playbackId="PLtkNjmv028bYRJr8BkDlGw7SHOGkCl4d"
                     slot="media"
                     crossOrigin
-                    muted
                     onSeek
                     currentTime={0}
                 />
                 <MediaControlBar>
+                    <MediaVolumeRange />
                     <MediaTimeRange onMouseDown={handleSeeking} />
                 </MediaControlBar>
             </MediaController>
