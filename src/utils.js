@@ -10,7 +10,7 @@ export function debounce(func, wait = 300) {
     };
 }
 
-export async function getAudioVolumeLevel() {
+export async function getAudioVolumeLevel({ delay } = { delay: 3000 }) {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const audioContext = new (window.AudioContext ||
         window.webkitAudioContext)();
@@ -32,9 +32,9 @@ export async function getAudioVolumeLevel() {
                 sum += val * val;
             }
 
-            const rms = Math.sqrt(sum / dataArray.length); // Root Mean Square
-            resolve(rms); // use this value as your volume level
-            stream.getTracks().forEach((track) => track.stop()); // Clean up
-        }, 500);
+            const rms = Math.sqrt(sum / dataArray.length);
+            resolve(rms);
+            stream.getTracks().forEach((track) => track.stop());
+        }, delay + 500);
     });
 }

@@ -7,12 +7,16 @@ import {
 import { useRef, useEffect, useState } from "react";
 import MuxVideo from "@mux/mux-video-react";
 import { debounce, getAudioVolumeLevel } from "./utils";
+import Countdown from "./Countdown";
 
 const Player = ({ isPlaying: initialIsPlaying }) => {
+    const defaultWaitBeforeGettingVolume = 3000; // 3 seconds
+    const defaultVolume = 1;
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(initialIsPlaying);
-    const [volume, setVolume] = useState(1); // Default volume level
+    const [volume, setVolume] = useState(defaultVolume);
     const [socket, setSocket] = useState(null);
+    const [gettingVolume, setGettingVolume] = useState(false);
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -68,6 +72,15 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         };
     }, []);
 
+    useEffect(() => {
+        if (gettingVolume) {
+            const timer = setTimeout(() => {
+                setGettingVolume(false);
+            }, defaultWaitBeforeGettingVolume + 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [gettingVolume]);
+
     const togglePlay = () => {
         if (videoRef.current) {
             const newIsPlaying = !isPlaying;
@@ -103,7 +116,10 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             console.log("window is undefined, skipping volume check");
             return;
         }
-        const volume = await getAudioVolumeLevel();
+        setGettingVolume(true);
+        const volume = await getAudioVolumeLevel({
+            delay: defaultWaitBeforeGettingVolume,
+        });
         const newVolume = Math.min(volume / 90, 1.0);
         setVolume(newVolume);
 
@@ -170,6 +186,12 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         <>
             <button onClick={togglePlay}>{isPlaying ? "Pause" : "Play"}</button>
             <button onClick={getVolume}>Get Volume</button>
+            {gettingVolume && (
+                <Countdown
+                    countdownBegin={defaultWaitBeforeGettingVolume / 1000}
+                    setGettingVolume={setGettingVolume}
+                />
+            )}
             <MediaController id="player">
                 <MuxVideo
                     ref={videoRef}
