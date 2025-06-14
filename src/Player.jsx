@@ -15,8 +15,11 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(initialIsPlaying);
     const [volume, setVolume] = useState(defaultVolume);
+    const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [socket, setSocket] = useState(null);
     const [gettingVolume, setGettingVolume] = useState(false);
+    const [currentlyConnectedUsers, setCurrentlyConnectedUsers] = useState(0);
+    const [averageLatitude, setAverageLatitude] = useState(null);
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -32,13 +35,20 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         setSocket(ws);
 
         ws.onopen = () => {
-            console.log("WebSocket connection established");
+            console.log("WebSocket connection opened");
+            setTimeout(() => {
+                getGlobalPlaybackSpeed(ws);
+            }, 1000);
         };
 
         ws.onmessage = (event) => {
             console.log("Raw WebSocket message received:", event);
             try {
                 const data = JSON.parse(event.data);
+                console.log("Parsed WebSocket message:", data);
+                if (data.connectedClients || data.type === "connectedClients") {
+                    setCurrentlyConnectedUsers(data.connectedClients);
+                }
                 if (data.type === "playback") {
                     setIsPlaying(data.isPlaying);
                     if (videoRef.current) {
@@ -52,6 +62,15 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                     setVolume(newVolume);
                     if (videoRef.current) {
                         videoRef.current.currentVolume = newVolume;
+                    }
+                }
+                if (data.type === "globalAverageLatitude") {
+                    const newLatitude = data.averageLatitude ?? 0;
+                    setAverageLatitude(newLatitude);
+                    if (newLatitude > 0 && videoRef.current) {
+                        const playbackSpeed =
+                            ((newLatitude + 90) / 180) * 1.5 + 0.5;
+                        videoRef.current.playbackRate = playbackSpeed;
                     }
                 }
             } catch (error) {
@@ -182,8 +201,39 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         }
     };
 
+    const getGlobalPlaybackSpeed = (ws) => {
+        navigator.geolocation.getCurrentPosition((position) => {
+            let lat = position.coords.latitude;
+            let newLat = lat;
+
+            if (averageLatitude !== null) {
+                newLat = (averageLatitude + lat) / 2;
+            } else {
+                newLat = lat;
+            }
+            setAverageLatitude(newLat);
+            if (ws && ws.readyState === 1) {
+                ws.send(
+                    JSON.stringify({
+                        type: "globalAverageLatitude",
+                        averageLatitude: newLat,
+                    })
+                );
+            } else {
+                console.error(
+                    "WebSocket is not open. Cannot send playback speed request."
+                );
+            }
+
+            const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
+            setPlaybackSpeed(playbackSpeed);
+            videoRef.current.playbackRate = playbackSpeed;
+        });
+    };
+
     return (
         <>
+            <p>Current users: {currentlyConnectedUsers}</p>
             <button onClick={togglePlay}>{isPlaying ? "Pause" : "Play"}</button>
             <button onClick={getVolume}>Get Volume</button>
             {gettingVolume && (
