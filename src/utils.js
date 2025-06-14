@@ -22,7 +22,6 @@ export async function getAudioVolumeLevel() {
 
     source.connect(analyser);
 
-    // Wait for about 1 second, then get the volume
     return new Promise((resolve) => {
         setTimeout(() => {
             analyser.getByteTimeDomainData(dataArray);
@@ -36,6 +35,6 @@ export async function getAudioVolumeLevel() {
             const rms = Math.sqrt(sum / dataArray.length); // Root Mean Square
             resolve(rms); // use this value as your volume level
             stream.getTracks().forEach((track) => track.stop()); // Clean up
-        }, 1000);
+        }, 500);
     });
 }

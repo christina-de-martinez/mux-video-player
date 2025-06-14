@@ -43,6 +43,13 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                             : videoRef.current.pause();
                     }
                 }
+                if (data.type === "audioVolume") {
+                    const newVolume = data.currentVolume ?? 1;
+                    setVolume(newVolume);
+                    if (videoRef.current) {
+                        videoRef.current.currentVolume = newVolume;
+                    }
+                }
             } catch (error) {
                 console.error("Error parsing WebSocket message:", error);
             }
@@ -97,11 +104,24 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             return;
         }
         const volume = await getAudioVolumeLevel();
-        setVolume(Math.min(volume / 90, 1.0));
+        const newVolume = Math.min(volume / 90, 1.0);
+        setVolume(newVolume);
+
+        if (socket && socket.readyState === 1) {
+            socket.send(
+                JSON.stringify({
+                    type: "audioVolume",
+                    currentVolume: newVolume,
+                })
+            );
+        } else {
+            console.error("WebSocket is not open. Cannot send seeking event.");
+        }
     };
 
     useEffect(() => {
         if (videoRef.current) {
+            console.log("Setting video volume to", volume);
             videoRef.current.volume = volume;
         }
         return () => {
@@ -155,9 +175,8 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                     ref={videoRef}
                     playbackId="PLtkNjmv028bYRJr8BkDlGw7SHOGkCl4d"
                     slot="media"
-                    crossOrigin
-                    onSeek
-                    currentTime={0}
+                    crossOrigin={true}
+                    currenttime={0}
                 />
                 <MediaControlBar>
                     <MediaVolumeRange />
