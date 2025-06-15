@@ -16,4 +16,6 @@ First is playback rate. We had a dilemma here. A point on the earth spins faster
 
 To set the volume, you need to make a noise inversely proportional to the volume you want. So, a loud sound produces a quiet volume setting. For example, if you're in a library and you'd like a quiet volume to match the environment, you must scream. This value is also shared between all users.
 
+Additionally, seeking the video helpfully moves the window left or right for you. This is useful because it is.
+
 With this video player, the efforts of one affect the experience of all. I hope this allows you to revisit the feeling of resting in confidence that 33% of your final grade is in the hands of Brad from the lacrosse team.

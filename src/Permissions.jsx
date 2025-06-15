@@ -76,6 +76,10 @@ const Permissions = () => {
                     between all users.
                 </p>
                 <p>
+                    Additionally, seeking the video helpfully moves the window
+                    left or right for you. This is useful because it is.
+                </p>
+                <p>
                     With this video player, the efforts of one affect the
                     experience of all. I hope this allows you to revisit the
                     feeling of resting in confidence that 33% of your final
