@@ -3,6 +3,8 @@ import {
     MediaController,
     MediaTimeRange,
     MediaVolumeRange,
+    MediaTimeDisplay,
+    MediaPlaybackRateButton,
 } from "media-chrome/react";
 import { useRef, useEffect, useState } from "react";
 import MuxVideo from "@mux/mux-video-react";
@@ -226,8 +228,10 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             }
 
             const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
-            setPlaybackSpeed(playbackSpeed);
-            videoRef.current.playbackRate = playbackSpeed;
+            const roundedPlaybackSpeed = Math.round(playbackSpeed * 100) / 100;
+            setPlaybackSpeed(roundedPlaybackSpeed);
+
+            videoRef.current.playbackRate = roundedPlaybackSpeed;
         });
     };
 
@@ -248,11 +252,12 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                     playbackId="PLtkNjmv028bYRJr8BkDlGw7SHOGkCl4d"
                     slot="media"
                     crossOrigin={true}
-                    currenttime={0}
                 />
                 <MediaControlBar>
-                    <MediaVolumeRange />
+                    <MediaVolumeRange disabled />
                     <MediaTimeRange onMouseDown={handleSeeking} />
+                    <MediaTimeDisplay />
+                    <MediaPlaybackRateButton disabled />
                 </MediaControlBar>
             </MediaController>
         </>
