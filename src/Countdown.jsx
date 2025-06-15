@@ -16,7 +16,16 @@ function Countdown({ countdownBegin = 3 }) {
         return () => clearInterval(interval);
     }, []);
 
-    return <p>{number > 0 ? number.toString() : "Listening..."}</p>;
+    return (
+        <p className="countdown">
+            Make a sound inversely loud to how you want the volume to be.
+            <br />
+            The louder the sound, the quieter the volume will be.
+            <span className="number">
+                {number > 0 ? number.toString() : "Listening..."}
+            </span>
+        </p>
+    );
 }
 
 export default Countdown;

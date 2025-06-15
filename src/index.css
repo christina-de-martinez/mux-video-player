@@ -1,68 +1,171 @@
+@import url(https://fonts.bunny.net/css?family=chivo:400|dela-gothic-one:400);
+
 :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+    font-family: "Chivo", system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+    color-scheme: light dark;
+    color: rgba(255, 255, 255, 0.87);
+    background-color: #000;
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+    font-weight: 500;
+    color: #f7c016;
+    text-decoration: inherit;
 }
 a:hover {
-  color: #535bf2;
+    color: #f26222;
 }
 
 body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+    margin: 0;
+    display: flex;
+    place-items: center;
+    min-width: 320px;
+    min-height: 100vh;
+    animation: all 2000ms ease-in-out;
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+    font-size: 3.2em;
+    line-height: 1.1;
+    font-family: "Dela Gothic One", display;
+}
+
+h2 {
+    margin: 12px;
+    padding: 0;
+    font-family: "Dela Gothic One", display;
+}
+
+.h3 {
+    font-size: 1.5em;
+    margin: 0;
+    padding: 0;
+    font-family: "Dela Gothic One", display;
+}
+
+media-play-button {
+    --media-icon-color: transparent;
+}
+
+.currentUsers {
+    position: absolute;
+    top: 2px;
+    left: 10px;
+    font-size: 12px;
+    font-family: monospace;
+}
+
+video {
+    margin-top: -40px;
+}
+
+.vidContainer {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: center;
+
+    .btnPlacer {
+        height: 1px;
+        width: 1px;
+        z-index: 999;
+        position: absolute;
+        left: 14px;
+        bottom: 100px;
+    }
+
+    .playPauseButton {
+        position: relative;
+        top: -39px;
+        left: 0;
+        z-index: 999;
+        width: 26px;
+        padding: 10px 3px;
+        background-color: transparent;
+    }
+
+    .setAudioButton {
+        position: relative;
+        top: -84px;
+        left: 24px;
+        z-index: 999;
+        width: 26px;
+        padding: 10px 3px;
+        background-color: transparent;
+    }
+
+    .countdown {
+        position: relative;
+        top: -90px;
+        left: 6px;
+        z-index: 999;
+        text-align: left;
+        width: 500px;
+
+        .number {
+            font-size: 26px;
+            display: block;
+            color: #f26222;
+        }
+    }
+}
+
+.permissions {
+    text-align: center;
+}
+
+.footnote {
+    font-size: 12px;
+}
+
+.inspiration {
+    margin: 80px 10px;
+    padding: 20px;
+    background-color: #f7c016;
+    border: 8px solid #ea3737;
+    box-shadow: 10px 10px 0 #f26222;
+    color: #000;
 }
 
 button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    padding: 0.6em 1.2em;
+    font-size: 1em;
+    font-weight: 500;
+    font-family: inherit;
+    background-color: #ea3737;
+    cursor: pointer;
+    transition: all 400ms ease-in-out;
+    font-size: 1.2em;
 }
 button:hover {
-  border-color: #646cff;
+    border-color: #f26222;
+    background-color: #f26222;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+    outline: 4px auto -webkit-focus-ring-color;
 }
 
 @media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
+    :root {
+        color: #213547;
+        background-color: #ffffff;
+    }
+    a:hover {
+        color: #ea3737;
+    }
+    button {
+        background-color: #f9f9f9;
+    }
 }

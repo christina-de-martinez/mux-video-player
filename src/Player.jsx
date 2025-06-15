@@ -5,7 +5,14 @@ import {
     MediaVolumeRange,
     MediaTimeDisplay,
     MediaPlaybackRateButton,
+    MediaPlayButton,
 } from "media-chrome/react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+    faPlay,
+    faPause,
+    faMicrophone,
+} from "@fortawesome/free-solid-svg-icons";
 import { useRef, useEffect, useState } from "react";
 import MuxVideo from "@mux/mux-video-react";
 import { debounce, getAudioVolumeLevel } from "./utils";
@@ -13,10 +20,9 @@ import Countdown from "./Countdown";
 
 const Player = ({ isPlaying: initialIsPlaying }) => {
     const defaultWaitBeforeGettingVolume = 3000; // 3 seconds
-    const defaultVolume = 1;
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(initialIsPlaying);
-    const [volume, setVolume] = useState(defaultVolume);
+    const [volume, setVolume] = useState(null);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [socket, setSocket] = useState(null);
     const [gettingVolume, setGettingVolume] = useState(false);
@@ -72,7 +78,9 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                     if (newLatitude > 0 && videoRef.current) {
                         const playbackSpeed =
                             ((newLatitude + 90) / 180) * 1.5 + 0.5;
-                        videoRef.current.playbackRate = playbackSpeed;
+                        const roundedPlaybackSpeed =
+                            Math.round(playbackSpeed * 100) / 100;
+                        videoRef.current.playbackRate = roundedPlaybackSpeed;
                     }
                 }
             } catch (error) {
@@ -141,14 +149,16 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         const volume = await getAudioVolumeLevel({
             delay: defaultWaitBeforeGettingVolume,
         });
+
         const newVolume = Math.min(volume / 90, 1.0);
-        setVolume(newVolume);
+        const inverseVolume = 1 - newVolume;
+        setVolume(inverseVolume);
 
         if (socket && socket.readyState === 1) {
             socket.send(
                 JSON.stringify({
                     type: "audioVolume",
-                    currentVolume: newVolume,
+                    currentVolume: inverseVolume,
                 })
             );
         } else {
@@ -237,29 +247,54 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
 
     return (
         <>
-            <p>Current users: {currentlyConnectedUsers}</p>
-            <button onClick={togglePlay}>{isPlaying ? "Pause" : "Play"}</button>
-            <button onClick={getVolume}>Get Volume</button>
-            {gettingVolume && (
-                <Countdown
-                    countdownBegin={defaultWaitBeforeGettingVolume / 1000}
-                    setGettingVolume={setGettingVolume}
-                />
-            )}
-            <MediaController id="player">
-                <MuxVideo
-                    ref={videoRef}
-                    playbackId="PLtkNjmv028bYRJr8BkDlGw7SHOGkCl4d"
-                    slot="media"
-                    crossOrigin={true}
-                />
-                <MediaControlBar>
-                    <MediaVolumeRange disabled />
-                    <MediaTimeRange onMouseDown={handleSeeking} />
-                    <MediaTimeDisplay />
-                    <MediaPlaybackRateButton disabled />
-                </MediaControlBar>
-            </MediaController>
+            <p className="currentUsers">
+                Currently connected: {currentlyConnectedUsers}
+            </p>
+            <div className="vidContainer">
+                <div className="btnPlacer">
+                    <button
+                        onClick={togglePlay}
+                        title="Play or pause"
+                        className="playPauseButton"
+                    >
+                        {isPlaying ? (
+                            <FontAwesomeIcon icon={faPause} />
+                        ) : (
+                            <FontAwesomeIcon icon={faPlay} />
+                        )}
+                    </button>
+                    <button
+                        onClick={getVolume}
+                        title="Set volume (records a short audio snippet)"
+                        className="setAudioButton"
+                    >
+                        <FontAwesomeIcon icon={faMicrophone} />
+                    </button>
+                    {gettingVolume && (
+                        <Countdown
+                            countdownBegin={
+                                defaultWaitBeforeGettingVolume / 1000
+                            }
+                            setGettingVolume={setGettingVolume}
+                        />
+                    )}
+                </div>
+                <MediaController id="player">
+                    <MuxVideo
+                        ref={videoRef}
+                        playbackId="PLtkNjmv028bYRJr8BkDlGw7SHOGkCl4d"
+                        slot="media"
+                        crossOrigin={true}
+                    />
+                    <MediaControlBar>
+                        <MediaPlayButton />
+                        <MediaVolumeRange disabled />
+                        <MediaTimeRange onMouseDown={handleSeeking} />
+                        <MediaTimeDisplay />
+                        <MediaPlaybackRateButton disabled />
+                    </MediaControlBar>
+                </MediaController>
+            </div>
         </>
     );
 };
