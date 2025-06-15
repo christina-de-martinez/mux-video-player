@@ -2,6 +2,8 @@
 
 This is my entry to the [CodeTV + Mux challenge](https://codetv.dev/blog/web-dev-challenge-hackathon-s2e3-devious-video-player-mux).
 
+See it here: [https://christinas-mux-video-player.vercel.app/](https://christinas-mux-video-player.vercel.app/)
+
 ## Inspiration - 🤝 Group Project: because sharing is caring 🤝
 
 Some of my fondest memories from school were group projects, where famously, everyone shared the load equally and I was not stuck doing someone else’s slides at 2am the night before the presentation.
