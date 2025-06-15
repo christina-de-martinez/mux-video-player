@@ -144,6 +144,7 @@ button {
     font-weight: 500;
     font-family: inherit;
     background-color: #ea3737;
+    color: #fff;
     cursor: pointer;
     transition: all 400ms ease-in-out;
     font-size: 1.2em;
