@@ -1,24 +1,17 @@
-# React + Vite
+# The most unhinged, Byzantine, devious, unusual video player you could imagine.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is my entry to the [CodeTV + Mux challenge](https://codetv.dev/blog/web-dev-challenge-hackathon-s2e3-devious-video-player-mux).
 
-Currently, two official plugins are available:
+## Inspiration - 🤝 Group Project: because sharing is caring 🤝
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Some of my fondest memories from school were group projects, where famously, everyone shared the load equally and I was not stuck doing someone else’s slides at 2am the night before the presentation.
 
-## Expanding the ESLint configuration
+With this project, I wanted to encapsulate that group project energy. I used websockets to make every setting global, because sharing is caring. If you pause the video, we all pause. If you watch the video at full volume in a public space, we’re all watching it at full volume right there with ya.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+There are a few additional niceties here.
 
-# mux-video-player
+First is playback rate. We had a dilemma here. A point on the earth spins faster at the equator, and slower the farther North or South you get. To solve this problem, I adjusted the playback rate to be a global average value based on the latitude of all connected users. To influence this value, move to a different latitude.
 
-## bugs / ideas
+To set the volume, you need to make a noise inversely proportional to the volume you want. So, a loud sound produces a quiet volume setting. For example, if you're in a library and you'd like a quiet volume to match the environment, you must scream. This value is also shared between all users.
 
-* make a sound inversely loud to how you want the video to be? right now it's as loud...
-* your playback speed is a function of your battery percentage: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getBattery
-* factor your playback speed in to your longitude. People at the equator get 1x playback speed, but if you're at a different latitude it slows it down for you
-* make the moveX when seeking dynamic based on how much we're seeking (seeking by 1 min should move more than seeking by 10 seconds)
-* something with the accelerometer?
-* I partially implemented seeking info to the websocket but we're not actually reading it. if one person seeks, we all seek. we are a hive mind. sharing is caring.
-* improve styling
+With this video player, the efforts of one affect the experience of all. I hope this allows you to revisit the feeling of resting in confidence that 33% of your final grade is in the hands of Brad from the lacrosse team.
