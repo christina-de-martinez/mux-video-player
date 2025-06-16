@@ -22,7 +22,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     const defaultWaitBeforeGettingVolume = 3000; // 3 seconds
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(initialIsPlaying);
-    const [volume, setVolume] = useState(1);
+    const [volume, setVolume] = useState(0.5);
     const [playbackSpeed, setPlaybackSpeed] = useState(1);
     const [socket, setSocket] = useState(null);
     const [gettingVolume, setGettingVolume] = useState(false);
