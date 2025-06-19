@@ -36,6 +36,10 @@ const Permissions = () => {
                 The site is better with friends. Try it out on a few devices at
                 once.
             </p>
+            <p>
+                This was only built for Chrome desktop. Bugs that show up on
+                other browsers and platforms just add to the ambience.
+            </p>
             <button onClick={openNewWindow}>
                 Enter the site (opens a popup)
             </button>
