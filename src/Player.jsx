@@ -1,3 +1,4 @@
+import { useRef, useEffect, useState, useCallback } from "react";
 import {
     MediaControlBar,
     MediaController,
@@ -13,7 +14,6 @@ import {
     faPause,
     faMicrophone,
 } from "@fortawesome/free-solid-svg-icons";
-import { useRef, useEffect, useState } from "react";
 import MuxVideo from "@mux/mux-video-react";
 import { debounce, getAudioVolumeLevel } from "./utils";
 import Countdown from "./Countdown";
@@ -23,11 +23,49 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     const videoRef = useRef(null);
     const [isPlaying, setIsPlaying] = useState(initialIsPlaying);
     const [volume, setVolume] = useState(0.5);
-    const [playbackSpeed, setPlaybackSpeed] = useState(1);
+    const [_playbackSpeed, setPlaybackSpeed] = useState(1);
     const [socket, setSocket] = useState(null);
     const [gettingVolume, setGettingVolume] = useState(false);
     const [currentlyConnectedUsers, setCurrentlyConnectedUsers] = useState(0);
     const [averageLatitude, setAverageLatitude] = useState(null);
+
+    const getGlobalPlaybackSpeed = useCallback(
+        (ws) => {
+            navigator.geolocation.getCurrentPosition((position) => {
+                let lat = position.coords.latitude;
+                let newLat = lat;
+
+                if (averageLatitude !== null) {
+                    newLat = (averageLatitude + lat) / 2;
+                } else {
+                    newLat = lat;
+                }
+                setAverageLatitude(newLat);
+                if (ws && ws.readyState === 1) {
+                    ws.send(
+                        JSON.stringify({
+                            type: "globalAverageLatitude",
+                            averageLatitude: newLat,
+                        })
+                    );
+                } else {
+                    console.error(
+                        "WebSocket is not open. Cannot send playback speed request."
+                    );
+                }
+
+                const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
+                const roundedPlaybackSpeed =
+                    Math.round(playbackSpeed * 100) / 100;
+                setPlaybackSpeed(roundedPlaybackSpeed);
+
+                if (videoRef.current) {
+                    videoRef.current.playbackRate = roundedPlaybackSpeed;
+                }
+            });
+        },
+        [averageLatitude]
+    );
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -36,7 +74,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         }
         // Connect to the WebSocket server
         const websocketUrl =
-            process.env.NODE_ENV === "production"
+            import.meta.env.MODE === "production"
                 ? "https://mux-video-player.onrender.com"
                 : "ws://localhost:8080";
         const ws = new WebSocket(websocketUrl);
@@ -51,9 +89,26 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
 
         ws.onmessage = (event) => {
             console.log("Raw WebSocket message received:", event);
+
+            if (!event.data || typeof event.data !== "string") {
+                console.warn("Received invalid WebSocket data:", event.data);
+                return;
+            }
+
+            const trimmedData = event.data.trim();
+            if (!trimmedData) {
+                console.warn("Received empty WebSocket message");
+                return;
+            }
+
             try {
-                const data = JSON.parse(event.data);
+                const data = JSON.parse(trimmedData);
                 console.log("Parsed WebSocket message:", data);
+
+                if (!data || typeof data !== "object") {
+                    console.warn("Parsed data is not a valid object:", data);
+                    return;
+                }
                 if (data.connectedClients || data.type === "connectedClients") {
                     setCurrentlyConnectedUsers(data.connectedClients);
                 }
@@ -99,7 +154,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         return () => {
             ws.close();
         };
-    }, []);
+    }, [averageLatitude, getGlobalPlaybackSpeed]);
 
     useEffect(() => {
         if (gettingVolume) {
@@ -167,13 +222,14 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     };
 
     useEffect(() => {
-        if (videoRef.current) {
+        const video = videoRef?.current;
+        if (video) {
             console.log("Setting video volume to", volume);
-            videoRef.current.volume = volume;
+            video.volume = volume;
         }
         return () => {
-            if (videoRef.current) {
-                videoRef.current.volume = 1;
+            if (video) {
+                video.volume = 1;
             }
         };
     }, [volume]);
@@ -211,38 +267,6 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                 );
             }
         }
-    };
-
-    const getGlobalPlaybackSpeed = (ws) => {
-        navigator.geolocation.getCurrentPosition((position) => {
-            let lat = position.coords.latitude;
-            let newLat = lat;
-
-            if (averageLatitude !== null) {
-                newLat = (averageLatitude + lat) / 2;
-            } else {
-                newLat = lat;
-            }
-            setAverageLatitude(newLat);
-            if (ws && ws.readyState === 1) {
-                ws.send(
-                    JSON.stringify({
-                        type: "globalAverageLatitude",
-                        averageLatitude: newLat,
-                    })
-                );
-            } else {
-                console.error(
-                    "WebSocket is not open. Cannot send playback speed request."
-                );
-            }
-
-            const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
-            const roundedPlaybackSpeed = Math.round(playbackSpeed * 100) / 100;
-            setPlaybackSpeed(roundedPlaybackSpeed);
-
-            videoRef.current.playbackRate = roundedPlaybackSpeed;
-        });
     };
 
     return (
