@@ -18,21 +18,27 @@ wss.on("connection", (ws) => {
     ws.on("message", (message) => {
         console.log("Received message:", message.toString());
 
-        const split = message.toString().split("}");
-        let messageWithConnectedClients = message.toString();
-        if (split[0]?.length) {
-            messageWithConnectedClients =
-                split[0] + ',"connectedClients":' + wss.clients.size + "}";
-        } else {
-            console.warn("Message format is incorrect:", message.toString());
-        }
-
-        // Broadcast the message to all connected clients
-        wss.clients.forEach((client) => {
-            if (client !== ws && client.readyState === 1) {
-                client.send(messageWithConnectedClients); // Ensure the message is sent as a string
+        try {
+            const messageStr = message.toString();
+            // validate that it's valid JSON
+            const parsed = JSON.parse(messageStr);
+            if (typeof parsed === "object" && parsed !== null && parsed.type) {
+                // Broadcast the message to all connected clients
+                wss.clients.forEach((client) => {
+                    if (client !== ws && client.readyState === 1) {
+                        client.send(messageStr);
+                    }
+                });
+            } else {
+                console.warn(
+                    "Received invalid message format (missing type):",
+                    parsed
+                );
             }
-        });
+        } catch (error) {
+            console.error("Received invalid JSON message:", error);
+            console.error("Raw message:", message.toString());
+        }
     });
 
     ws.on("close", () => {
