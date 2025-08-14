@@ -29,6 +29,18 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     const [currentlyConnectedUsers, setCurrentlyConnectedUsers] = useState(0);
     const [averageLatitude, setAverageLatitude] = useState(null);
 
+    const calculatePlaybackSpeed = useCallback((latitude) => {
+        const playbackSpeed = ((latitude + 90) / 180) * 1.5 + 0.5;
+        return Math.round(playbackSpeed * 100) / 100;
+    }, []);
+
+    const applyPlaybackSpeed = useCallback((speed) => {
+        if (videoRef.current) {
+            videoRef.current.playbackRate = speed;
+        }
+        setPlaybackSpeed(speed);
+    }, []);
+
     const getGlobalPlaybackSpeed = useCallback(
         (ws) => {
             navigator.geolocation.getCurrentPosition((position) => {
@@ -54,17 +66,11 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                     );
                 }
 
-                const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
-                const roundedPlaybackSpeed =
-                    Math.round(playbackSpeed * 100) / 100;
-                setPlaybackSpeed(roundedPlaybackSpeed);
-
-                if (videoRef.current) {
-                    videoRef.current.playbackRate = roundedPlaybackSpeed;
-                }
+                const roundedPlaybackSpeed = calculatePlaybackSpeed(newLat);
+                applyPlaybackSpeed(roundedPlaybackSpeed);
             });
         },
-        [averageLatitude]
+        [averageLatitude, calculatePlaybackSpeed, applyPlaybackSpeed]
     );
 
     useEffect(() => {
@@ -130,13 +136,10 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                 if (data.type === "globalAverageLatitude") {
                     const newLatitude = data.averageLatitude ?? 0;
                     setAverageLatitude(newLatitude);
-                    if (newLatitude > 0 && videoRef.current) {
-                        const playbackSpeed =
-                            ((newLatitude + 90) / 180) * 1.5 + 0.5;
+                    if (newLatitude > 0) {
                         const roundedPlaybackSpeed =
-                            Math.round(playbackSpeed * 100) / 100;
-                        videoRef.current.playbackRate = roundedPlaybackSpeed;
-                        setPlaybackSpeed(roundedPlaybackSpeed);
+                            calculatePlaybackSpeed(newLatitude);
+                        applyPlaybackSpeed(roundedPlaybackSpeed);
                     }
                 }
             } catch (error) {
@@ -155,7 +158,12 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         return () => {
             ws.close();
         };
-    }, [averageLatitude, getGlobalPlaybackSpeed]);
+    }, [
+        averageLatitude,
+        getGlobalPlaybackSpeed,
+        calculatePlaybackSpeed,
+        applyPlaybackSpeed,
+    ]);
 
     useEffect(() => {
         if (gettingVolume) {
