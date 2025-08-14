@@ -1,9 +1,20 @@
 import { WebSocketServer } from "ws";
 
 const wss = new WebSocketServer({ port: 8080 });
+let globalAverageLatitude = null;
 
 wss.on("connection", (ws) => {
     console.log("Client connected");
+
+    if (globalAverageLatitude !== null) {
+        ws.send(
+            JSON.stringify({
+                type: "globalAverageLatitude",
+                averageLatitude: globalAverageLatitude,
+            })
+        );
+    }
+
     wss.clients.forEach((client) => {
         if (client.readyState === 1) {
             client.send(
@@ -20,9 +31,19 @@ wss.on("connection", (ws) => {
 
         try {
             const messageStr = message.toString();
-            // validate that it's valid JSON
             const parsed = JSON.parse(messageStr);
             if (typeof parsed === "object" && parsed !== null && parsed.type) {
+                if (
+                    parsed.type === "globalAverageLatitude" &&
+                    parsed.averageLatitude !== undefined
+                ) {
+                    globalAverageLatitude = parsed.averageLatitude;
+                    console.log(
+                        "Updated global average latitude:",
+                        globalAverageLatitude
+                    );
+                }
+
                 // Broadcast the message to all connected clients
                 wss.clients.forEach((client) => {
                     if (client !== ws && client.readyState === 1) {

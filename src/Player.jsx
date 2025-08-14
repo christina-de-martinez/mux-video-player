@@ -136,6 +136,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                         const roundedPlaybackSpeed =
                             Math.round(playbackSpeed * 100) / 100;
                         videoRef.current.playbackRate = roundedPlaybackSpeed;
+                        setPlaybackSpeed(roundedPlaybackSpeed);
                     }
                 }
             } catch (error) {
