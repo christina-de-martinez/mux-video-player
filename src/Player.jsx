@@ -18,6 +18,13 @@ import MuxVideo from "@mux/mux-video-react";
 import { debounce, getAudioVolumeLevel } from "./utils";
 import Countdown from "./Countdown";
 
+const WS_READY_STATES = {
+    CONNECTING: 0,
+    OPEN: 1,
+    CLOSING: 2,
+    CLOSED: 3,
+};
+
 const Player = ({ isPlaying: initialIsPlaying }) => {
     const defaultWaitBeforeGettingVolume = 3000; // 3 seconds
     const videoRef = useRef(null);
@@ -41,7 +48,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                     newLat = lat;
                 }
                 setAverageLatitude(newLat);
-                if (ws && ws.readyState === 1) {
+                if (ws && ws.readyState === WS_READY_STATES.OPEN) {
                     ws.send(
                         JSON.stringify({
                             type: "globalAverageLatitude",
@@ -77,87 +84,148 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         // Connect to the WebSocket server
         const websocketUrl =
             import.meta.env.MODE === "production"
-                ? "https://mux-video-player.onrender.com"
+                ? "wss://mux-video-player.onrender.com"
                 : "ws://localhost:8080";
-        const ws = new WebSocket(websocketUrl);
-        setSocket(ws);
 
-        ws.onopen = () => {
-            console.log("WebSocket connection opened");
-            setTimeout(() => {
-                getGlobalPlaybackSpeed(ws);
-            }, 1000);
-        };
+        let ws = null;
+        let reconnectInterval = null;
+        let heartbeatInterval = null;
 
-        ws.onmessage = (event) => {
-            console.log("Raw WebSocket message received:", event);
-
-            if (!event.data || typeof event.data !== "string") {
-                console.warn("Received invalid WebSocket data:", event.data);
-                return;
+        const connect = () => {
+            // Clean up any existing connection first
+            if (ws) {
+                ws.close();
             }
 
-            const trimmedData = event.data.trim();
-            if (!trimmedData) {
-                console.warn("Received empty WebSocket message");
-                return;
-            }
+            ws = new WebSocket(websocketUrl);
+            setSocket(ws);
 
-            try {
-                const data = JSON.parse(trimmedData);
-                console.log("Parsed WebSocket message:", data);
+            ws.onopen = () => {
+                console.log("WebSocket connection opened");
 
-                if (!data || typeof data !== "object") {
-                    console.warn("Parsed data is not a valid object:", data);
+                // Clear reconnect interval if connection is successful
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                }
+
+                // Set up heartbeat to keep connection alive
+                heartbeatInterval = setInterval(() => {
+                    if (ws && ws.readyState === WS_READY_STATES.OPEN) {
+                        ws.send(JSON.stringify({ type: "heartbeat" }));
+                    }
+                }, 30000); // Send heartbeat every 30 seconds
+
+                setTimeout(() => {
+                    getGlobalPlaybackSpeed(ws);
+                }, 1000);
+            };
+
+            ws.onmessage = (event) => {
+                console.log("Raw WebSocket message received:", event);
+
+                if (!event.data || typeof event.data !== "string") {
+                    console.warn(
+                        "Received invalid WebSocket data:",
+                        event.data
+                    );
                     return;
                 }
-                if (data.connectedClients || data.type === "connectedClients") {
-                    setCurrentlyConnectedUsers(data.connectedClients);
-                }
-                if (data.type === "playback") {
-                    setIsPlaying(data.isPlaying);
-                    if (videoRef.current) {
-                        data.isPlaying
-                            ? videoRef.current.play()
-                            : videoRef.current.pause();
-                    }
-                }
-                if (data.type === "audioVolume") {
-                    const newVolume = data.currentVolume ?? 1;
-                    setVolume(newVolume);
-                    if (videoRef.current) {
-                        videoRef.current.currentVolume = newVolume;
-                    }
-                }
-                if (data.type === "globalAverageLatitude") {
-                    const newLatitude = data.averageLatitude ?? 0;
-                    setAverageLatitude(newLatitude);
-                    if (newLatitude > 0 && videoRef.current) {
-                        const playbackSpeed =
-                            ((newLatitude + 90) / 180) * 1.5 + 0.5;
-                        const roundedPlaybackSpeed =
-                            Math.round(playbackSpeed * 100) / 100;
-                        videoRef.current.playbackRate = roundedPlaybackSpeed;
-                        setPlaybackSpeed(roundedPlaybackSpeed);
-                    }
-                }
-            } catch (error) {
-                console.error("Error parsing WebSocket message:", error);
-            }
-        };
 
-        ws.onerror = (error) => {
-            console.error("WebSocket error:", error);
-        };
+                const trimmedData = event.data.trim();
+                if (!trimmedData) {
+                    console.warn("Received empty WebSocket message");
+                    return;
+                }
 
-        ws.onclose = () => {
-            console.log("WebSocket connection closed");
-        };
+                try {
+                    const data = JSON.parse(trimmedData);
+                    console.log("Parsed WebSocket message:", data);
 
-        return () => {
-            ws.close();
+                    if (!data || typeof data !== "object") {
+                        console.warn(
+                            "Parsed data is not a valid object:",
+                            data
+                        );
+                        return;
+                    }
+                    if (
+                        data.connectedClients ||
+                        data.type === "connectedClients"
+                    ) {
+                        setCurrentlyConnectedUsers(data.connectedClients);
+                    }
+                    if (data.type === "playback") {
+                        setIsPlaying(data.isPlaying);
+                        if (videoRef.current) {
+                            data.isPlaying
+                                ? videoRef.current.play()
+                                : videoRef.current.pause();
+                        }
+                    }
+                    if (data.type === "audioVolume") {
+                        const newVolume = data.currentVolume ?? 1;
+                        setVolume(newVolume);
+                        if (videoRef.current) {
+                            videoRef.current.currentVolume = newVolume;
+                        }
+                    }
+                    if (data.type === "globalAverageLatitude") {
+                        const newLatitude = data.averageLatitude ?? 0;
+                        setAverageLatitude(newLatitude);
+                        if (newLatitude > 0 && videoRef.current) {
+                            const playbackSpeed =
+                                ((newLatitude + 90) / 180) * 1.5 + 0.5;
+                            const roundedPlaybackSpeed =
+                                Math.round(playbackSpeed * 100) / 100;
+                            videoRef.current.playbackRate =
+                                roundedPlaybackSpeed;
+                            setPlaybackSpeed(roundedPlaybackSpeed);
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error parsing WebSocket message:", error);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error("WebSocket error:", error);
+            };
+
+            ws.onclose = (event) => {
+                console.log(
+                    `WebSocket connection closed: ${event.code} ${event.reason}`
+                );
+
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                    heartbeatInterval = null;
+                }
+
+                if (!reconnectInterval) {
+                    console.log("Setting up reconnection...");
+                    reconnectInterval = setInterval(() => {
+                        console.log("Attempting to reconnect...");
+                        connect();
+                    }, 5000);
+                }
+            };
+
+            connect();
+
+            return () => {
+                if (heartbeatInterval) {
+                    clearInterval(heartbeatInterval);
+                }
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                }
+                if (ws && ws.readyState === WS_READY_STATES.OPEN) {
+                    ws.close(1000, "Component unmounted");
+                }
+            };
         };
-    }, [averageLatitude, getGlobalPlaybackSpeed]);
+    }, [getGlobalPlaybackSpeed]);
 
     useEffect(() => {
         if (gettingVolume) {
@@ -180,7 +248,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             }
 
             // Send the updated state to the WebSocket server
-            if (socket && socket.readyState === 1) {
+            if (socket && socket.readyState === WS_READY_STATES.OPEN) {
                 console.log(
                     "Sending WebSocket message",
                     newIsPlaying,
@@ -212,7 +280,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         const inverseVolume = 1 - newVolume;
         setVolume(inverseVolume);
 
-        if (socket && socket.readyState === 1) {
+        if (socket && socket.readyState === WS_READY_STATES.OPEN) {
             socket.send(
                 JSON.stringify({
                     type: "audioVolume",
@@ -257,7 +325,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
 
             debouncedSeeking(event, currentTime);
 
-            if (socket && socket.readyState === 1) {
+            if (socket && socket.readyState === WS_READY_STATES.OPEN) {
                 socket.send(
                     JSON.stringify({
                         type: "seeking",
