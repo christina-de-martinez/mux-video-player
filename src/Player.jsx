@@ -258,19 +258,6 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             const currentTime = videoRef.current.currentTime;
 
             debouncedSeeking(event, currentTime);
-
-            if (socket && socket.readyState === 1) {
-                socket.send(
-                    JSON.stringify({
-                        type: "seeking",
-                        currentTime: currentTime,
-                    })
-                );
-            } else {
-                console.error(
-                    "WebSocket is not open. Cannot send seeking event."
-                );
-            }
         }
     };
 
