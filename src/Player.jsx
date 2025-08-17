@@ -28,46 +28,47 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
     const [gettingVolume, setGettingVolume] = useState(false);
     const [currentlyConnectedUsers, setCurrentlyConnectedUsers] = useState(0);
     const [averageLatitude, setAverageLatitude] = useState(null);
+    const averageLatitudeRef = useRef(null);
 
-    const getGlobalPlaybackSpeed = useCallback(
-        (ws) => {
-            navigator.geolocation.getCurrentPosition((position) => {
-                let lat = position.coords.latitude;
-                let newLat = lat;
+    useEffect(() => {
+        averageLatitudeRef.current = averageLatitude;
+    }, [averageLatitude]);
 
-                if (averageLatitude !== null) {
-                    newLat = (averageLatitude + lat) / 2;
-                } else {
-                    newLat = lat;
-                }
-                setAverageLatitude(newLat);
-                if (ws && ws.readyState === 1) {
-                    ws.send(
-                        JSON.stringify({
-                            type: "globalAverageLatitude",
-                            averageLatitude: newLat,
-                        })
-                    );
-                } else {
-                    console.error(
-                        "WebSocket is not open. Cannot send playback speed request."
-                    );
-                }
+    const getGlobalPlaybackSpeed = useCallback((ws) => {
+        navigator.geolocation.getCurrentPosition((position) => {
+            let lat = position.coords.latitude;
+            let newLat = lat;
 
-                const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
+            if (averageLatitudeRef.current !== null) {
+                newLat = (averageLatitudeRef.current + lat) / 2;
+            } else {
+                newLat = lat;
+            }
+            setAverageLatitude(newLat);
+            if (ws && ws.readyState === 1) {
+                ws.send(
+                    JSON.stringify({
+                        type: "globalAverageLatitude",
+                        averageLatitude: newLat,
+                    })
+                );
+            } else {
+                console.error(
+                    "WebSocket is not open. Cannot send playback speed request."
+                );
+            }
 
-                const roundedPlaybackSpeed =
-                    Math.round(playbackSpeed * 100) / 100;
+            const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
 
-                setPlaybackSpeed(roundedPlaybackSpeed);
+            const roundedPlaybackSpeed = Math.round(playbackSpeed * 100) / 100;
 
-                if (videoRef.current) {
-                    videoRef.current.playbackRate = roundedPlaybackSpeed;
-                }
-            });
-        },
-        [averageLatitude]
-    );
+            setPlaybackSpeed(roundedPlaybackSpeed);
+
+            if (videoRef.current) {
+                videoRef.current.playbackRate = roundedPlaybackSpeed;
+            }
+        });
+    }, []);
 
     useEffect(() => {
         if (typeof window === "undefined") {
@@ -77,8 +78,10 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         // Connect to the WebSocket server
         const websocketUrl =
             import.meta.env.MODE === "production"
-                ? "https://mux-video-player.onrender.com"
+                ? "wss://mux-video-player.onrender.com"
                 : "ws://localhost:8080";
+
+        console.log(`Connecting to WebSocket at ${websocketUrl}`);
         const ws = new WebSocket(websocketUrl);
         setSocket(ws);
 
@@ -152,14 +155,24 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             console.error("WebSocket error:", error);
         };
 
-        ws.onclose = () => {
-            console.log("WebSocket connection closed");
+        ws.onclose = (event) => {
+            console.log(
+                `WebSocket connection closed with code ${event.code}, reason: ${event.reason}`
+            );
         };
 
         return () => {
-            ws.close();
+            console.log(
+                "Closing WebSocket connection due to component cleanup"
+            );
+            if (
+                ws.readyState === WebSocket.OPEN ||
+                ws.readyState === WebSocket.CONNECTING
+            ) {
+                ws.close();
+            }
         };
-    }, [averageLatitude, getGlobalPlaybackSpeed]);
+    }, [getGlobalPlaybackSpeed]);
 
     useEffect(() => {
         if (gettingVolume) {
