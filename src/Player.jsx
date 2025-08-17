@@ -183,35 +183,48 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         }
     }, [gettingVolume]);
 
-    const togglePlay = () => {
-        if (videoRef.current) {
-            const newIsPlaying = !isPlaying;
-            setIsPlaying(newIsPlaying);
-            newIsPlaying ? videoRef.current.play() : videoRef.current.pause();
-
-            if (typeof window === "undefined") {
-                console.log("window is undefined, skipping WebSocket message");
-                return;
-            }
-
-            // Send the updated state to the WebSocket server
-            if (socket && socket.readyState === 1) {
-                console.log(
-                    "Sending WebSocket message",
-                    newIsPlaying,
-                    socket.readyState
-                );
-                socket.send(
-                    JSON.stringify({
-                        type: "playback",
-                        isPlaying: newIsPlaying,
-                    })
-                );
-            } else {
-                console.error("WebSocket is not open. Cannot send message.");
-            }
+    const handlePlayPause = useCallback(() => {
+        if (!videoRef.current) {
+            console.error("Video reference is not set.");
+            return;
         }
-    };
+        let newIsPlaying = videoRef.current.paused ? false : true;
+        setIsPlaying(newIsPlaying);
+
+        if (typeof window === "undefined") {
+            console.log("window is undefined, skipping WebSocket message");
+            return;
+        }
+
+        if (socket && socket.readyState === 1) {
+            console.log(
+                "Sending WebSocket message",
+                newIsPlaying,
+                socket.readyState
+            );
+            socket.send(
+                JSON.stringify({
+                    type: "playback",
+                    isPlaying: newIsPlaying,
+                })
+            );
+        } else {
+            console.error("WebSocket is not open. Cannot send message.");
+        }
+    }, [socket]);
+
+    useEffect(() => {
+        const video = videoRef.current;
+        if (video) {
+            video.addEventListener("play", handlePlayPause);
+            video.addEventListener("pause", handlePlayPause);
+
+            return () => {
+                video.removeEventListener("play", handlePlayPause);
+                video.removeEventListener("pause", handlePlayPause);
+            };
+        }
+    }, [handlePlayPause]);
 
     const getVolume = async () => {
         if (typeof window === "undefined") {
@@ -295,22 +308,12 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
             <div className="vidContainer">
                 <div className="btnPlacer">
                     <button
-                        onClick={togglePlay}
-                        title="Play or pause"
-                        className="playPauseButton"
-                    >
-                        {isPlaying ? (
-                            <FontAwesomeIcon icon={faPause} />
-                        ) : (
-                            <FontAwesomeIcon icon={faPlay} />
-                        )}
-                    </button>
-                    <button
                         onClick={getVolume}
                         title="Set volume (records a short audio snippet)"
                         className="setAudioButton"
                     >
                         <FontAwesomeIcon icon={faMicrophone} />
+                        <span>Set&nbsp;volume</span>
                     </button>
                     {gettingVolume && (
                         <Countdown
@@ -321,7 +324,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                         />
                     )}
                 </div>
-                <MediaController id="player">
+                <MediaController id="player" style={{ aspectRatio: "16/9" }}>
                     <MuxVideo
                         ref={videoRef}
                         playbackId="PLtkNjmv028bYRJr8BkDlGw7SHOGkCl4d"
@@ -329,7 +332,14 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                         crossOrigin={true}
                     />
                     <MediaControlBar>
-                        <MediaPlayButton />
+                        <MediaPlayButton notooltip>
+                            <span slot="play">
+                                <FontAwesomeIcon icon={faPause} />
+                            </span>
+                            <span slot="pause">
+                                <FontAwesomeIcon icon={faPlay} />
+                            </span>
+                        </MediaPlayButton>
                         <MediaVolumeRange disabled />
                         <MediaTimeRange onMouseDown={handleSeeking} />
                         <MediaTimeDisplay />
