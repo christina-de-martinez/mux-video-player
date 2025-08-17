@@ -78,7 +78,7 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
         // Connect to the WebSocket server
         const websocketUrl =
             import.meta.env.MODE === "production"
-                ? "wss://mux-video-player.onrender.com"
+                ? "https://mux-video-player.onrender.com"
                 : "ws://localhost:8080";
 
         console.log(`Connecting to WebSocket at ${websocketUrl}`);
