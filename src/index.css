@@ -27,7 +27,7 @@ a:hover {
 body {
     margin: 0;
     display: flex;
-    place-items: center;
+    place-items: flex-start;
     min-width: 320px;
     min-height: 100vh;
     animation: all 2000ms ease-in-out;
@@ -62,10 +62,7 @@ media-play-button {
     left: 10px;
     font-size: 12px;
     font-family: monospace;
-}
-
-video {
-    margin-top: -40px;
+    margin: 6px;
 }
 
 .vidContainer {
@@ -73,6 +70,7 @@ video {
     flex-direction: row;
     align-items: flex-end;
     justify-content: center;
+    margin-top: 20px;
 
     .btnPlacer {
         height: 1px;
@@ -80,36 +78,37 @@ video {
         z-index: 999;
         position: absolute;
         left: 17px;
-        bottom: 107px;
-    }
-
-    .playPauseButton {
-        position: relative;
-        top: -39px;
-        left: 0;
-        z-index: 999;
-        width: 26px;
-        padding: 10px 3px;
-        background-color: transparent;
+        bottom: 127px;
     }
 
     .setAudioButton {
         position: relative;
-        top: -84px;
-        left: 24px;
+        left: -2px;
         z-index: 999;
-        width: 26px;
+        min-width: 100px;
         padding: 10px 3px;
         background-color: transparent;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        background-color: #0e0e15;
+        font-size: 18px;
+
+        span {
+            margin-left: 8px;
+        }
+    }
+    .setAudioButton:hover {
+        background-color: #232331;
     }
 
     .countdown {
         position: relative;
-        top: -90px;
-        left: 6px;
         z-index: 999;
         text-align: left;
         width: 500px;
+        margin: 0;
 
         .number {
             font-size: 26px;
