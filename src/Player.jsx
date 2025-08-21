@@ -18,10 +18,10 @@ import MuxVideo from "@mux/mux-video-react";
 import { debounce, getAudioVolumeLevel } from "./utils";
 import Countdown from "./Countdown";
 
-const Player = ({ isPlaying: initialIsPlaying }) => {
+const Player = () => {
     const defaultWaitBeforeGettingVolume = 3000; // 3 seconds
     const videoRef = useRef(null);
-    const [isPlaying, setIsPlaying] = useState(initialIsPlaying);
+    const [_isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(0.5);
     const [_playbackSpeed, setPlaybackSpeed] = useState(1);
     const [socket, setSocket] = useState(null);
@@ -333,10 +333,10 @@ const Player = ({ isPlaying: initialIsPlaying }) => {
                     />
                     <MediaControlBar>
                         <MediaPlayButton notooltip>
-                            <span slot="play">
+                            <span slot="pause">
                                 <FontAwesomeIcon icon={faPause} />
                             </span>
-                            <span slot="pause">
+                            <span slot="play">
                                 <FontAwesomeIcon icon={faPlay} />
                             </span>
                         </MediaPlayButton>

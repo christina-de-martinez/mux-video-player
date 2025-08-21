@@ -71,6 +71,7 @@ media-play-button {
     align-items: flex-end;
     justify-content: center;
     margin-top: 20px;
+    overflow: hidden;
 
     .btnPlacer {
         height: 1px;
@@ -84,9 +85,10 @@ media-play-button {
     .setAudioButton {
         position: relative;
         left: -2px;
+        top: 0px;
         z-index: 999;
         min-width: 100px;
-        padding: 10px 3px;
+        padding: 8px 3px;
         background-color: transparent;
         display: flex;
         flex-direction: row;
@@ -109,6 +111,7 @@ media-play-button {
         text-align: left;
         width: 500px;
         margin: 0;
+        top: -3px;
 
         .number {
             font-size: 26px;
