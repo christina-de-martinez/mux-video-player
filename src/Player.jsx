@@ -34,6 +34,11 @@ const Player = () => {
         averageLatitudeRef.current = averageLatitude;
     }, [averageLatitude]);
 
+    const getRoundedPlaybackSpeedFromLatitude = (lat) => {
+        const playbackSpeed = ((lat + 90) / 180) * 1.5 + 0.5;
+        return Math.round(playbackSpeed * 100) / 100;
+    };
+
     const getGlobalPlaybackSpeed = useCallback((ws) => {
         navigator.geolocation.getCurrentPosition((position) => {
             let lat = position.coords.latitude;
@@ -58,9 +63,8 @@ const Player = () => {
                 );
             }
 
-            const playbackSpeed = ((newLat + 90) / 180) * 1.5 + 0.5;
-
-            const roundedPlaybackSpeed = Math.round(playbackSpeed * 100) / 100;
+            const roundedPlaybackSpeed =
+                getRoundedPlaybackSpeedFromLatitude(newLat);
 
             setPlaybackSpeed(roundedPlaybackSpeed);
 
@@ -136,11 +140,8 @@ const Player = () => {
                     const newLatitude = data.averageLatitude ?? 0;
                     setAverageLatitude(newLatitude);
                     if (newLatitude > 0 && videoRef.current) {
-                        const playbackSpeed =
-                            ((newLatitude + 90) / 180) * 1.5 + 0.5;
                         const roundedPlaybackSpeed =
-                            Math.round(playbackSpeed * 100) / 100;
-
+                            getRoundedPlaybackSpeedFromLatitude(newLatitude);
                         videoRef.current.playbackRate = roundedPlaybackSpeed;
 
                         setPlaybackSpeed(roundedPlaybackSpeed);
