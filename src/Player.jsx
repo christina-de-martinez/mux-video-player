@@ -35,7 +35,8 @@ const Player = () => {
     }, [averageLatitude]);
 
     const getRoundedPlaybackSpeedFromLatitude = (lat) => {
-        const playbackSpeed = ((lat + 90) / 180) * 1.5 + 0.5;
+        const distanceFromEquator = Math.abs(lat);
+        const playbackSpeed = 1 + distanceFromEquator / 90;
         return Math.round(playbackSpeed * 100) / 100;
     };
 
